@@ -11,7 +11,6 @@ import re
 import webbrowser
 from difflib import SequenceMatcher
 
-import darkdetect
 import imgviz
 import natsort
 import numpy as np
@@ -156,23 +155,6 @@ class LabelingWidget(LabelDialog):
         self.label_list = LabelListWidget()
         self.last_open_dir = None
 
-        if not darkdetect.isDark():
-            dock_title_style = (
-                "QDockWidget::title {"
-                "text-align: center;"
-                "padding: 0px;"
-                "background-color: #f0f0f0;"
-                "}"
-            )
-        else:
-            dock_title_style = (
-                "QDockWidget::title {"
-                "text-align: center;"
-                "padding: 0px;"
-                "background-color: #333333;"
-                "}"
-            )
-
         self.flag_dock = self.flag_widget = None
         self.flag_dock = QtWidgets.QDockWidget(self.tr("Flags"), self)
         self.flag_dock.setObjectName("Flags")
@@ -203,7 +185,11 @@ class LabelingWidget(LabelDialog):
         self.shape_dock = QtWidgets.QDockWidget(self.tr("Objects"), self)
         self.shape_dock.setWidget(self.label_list)
         self.shape_dock.setStyleSheet(
-            "QDockWidget::title { background: transparent; }"
+            "QDockWidget::title {"
+            "text-align: center;"
+            "padding: 0px;"
+            "background-color: #f0f0f0;"
+            "}"
         )
         self.shape_dock.setTitleBarWidget(QtWidgets.QWidget())
 
@@ -225,7 +211,13 @@ class LabelingWidget(LabelDialog):
         self.label_dock = QtWidgets.QDockWidget(self.tr("Labels"), self)
         self.label_dock.setObjectName("Labels")
         self.label_dock.setWidget(self.unique_label_list)
-        self.label_dock.setStyleSheet(dock_title_style)
+        self.label_dock.setStyleSheet(
+            "QDockWidget::title {"
+            "text-align: center;"
+            "padding: 0px;"
+            "background-color: #f0f0f0;"
+            "}"
+        )
         self.file_search = QtWidgets.QLineEdit()
         self.file_search.setPlaceholderText(self.tr("Search Filename"))
         self.file_search.textChanged.connect(self.file_search_changed)
@@ -243,7 +235,13 @@ class LabelingWidget(LabelDialog):
         file_list_widget = QtWidgets.QWidget()
         file_list_widget.setLayout(file_list_layout)
         self.file_dock.setWidget(file_list_widget)
-        self.file_dock.setStyleSheet(dock_title_style)
+        self.file_dock.setStyleSheet(
+            "QDockWidget::title {"
+            "text-align: center;"
+            "padding: 0px;"
+            "background-color: #f0f0f0;"
+            "}"
+        )
 
         self.zoom_widget = ZoomWidget()
 
@@ -659,6 +657,14 @@ class LabelingWidget(LabelDialog):
             icon="convert",
             tip=self.tr(
                 "Perform conversion from horizontal bounding box to oriented bounding box"
+            ),
+        )
+        obb_to_hbb = action(
+            self.tr("&Convert OBB to HBB"),
+            self.obb_to_hbb,
+            icon="convert",
+            tip=self.tr(
+                "Perform conversion from oriented bounding box to horizontal bounding box"
             ),
         )
 
@@ -1194,6 +1200,7 @@ class LabelingWidget(LabelDialog):
                 modify_label,
                 None,
                 hbb_to_obb,
+                obb_to_hbb,
             ),
         )
         utils.add_actions(
@@ -1737,6 +1744,61 @@ class LabelingWidget(LabelDialog):
                     if data["shapes"][i]["shape_type"] == "rectangle":
                         data["shapes"][i]["shape_type"] = "rotation"
                         data["shapes"][i]["direction"] = 0
+                with open(label_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+
+                # Update progress bar
+                current_index += 1
+                progress_value = int((current_index / total_files) * 100)
+                progress_bar.setValue(progress_value)
+
+            # Reload the file after processing all label files
+            self.load_file(self.filename)
+            return True
+        except Exception as e:
+            print(f"Error occurred while updating labels: {e}")
+            return False
+        finally:
+            # Hide the progress dialog after processing is done
+            progress_dialog.hide()
+
+    def obb_to_hbb(self):
+        label_file_list = self.get_label_file_list()
+
+        total_files = len(label_file_list)
+        current_index = 0
+
+        progress_dialog = QtWidgets.QDialog(self)
+        progress_dialog.setWindowTitle("Converting...")
+        progress_dialog_layout = QVBoxLayout(progress_dialog)
+        progress_bar = QtWidgets.QProgressBar()
+        progress_dialog_layout.addWidget(progress_bar)
+        progress_dialog.setLayout(progress_dialog_layout)
+
+        # Show the progress dialog before entering the loop
+        progress_dialog.show()
+
+        try:
+            for label_file in label_file_list:
+                # Update progress label
+                QtWidgets.QApplication.processEvents()
+
+                with open(label_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                for i in range(len(data["shapes"])):
+                    if data["shapes"][i]["shape_type"] == "rotation":
+                        del data["shapes"][i]["direction"]
+                        data["shapes"][i]["shape_type"] = "rectangle"
+                        points = np.array(data["shapes"][i]["points"]).astype(
+                            np.int32
+                        )
+                        x, y, w, h = map(int, list(cv2.boundingRect(points)))
+                        data["shapes"][i]["points"] = [
+                            [x, y],
+                            [x + w, y],
+                            [x + w, y + w],
+                            [x, y + w],
+                        ]
                 with open(label_file, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=2, ensure_ascii=False)
 

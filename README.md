@@ -18,38 +18,12 @@
 
 ![](https://user-images.githubusercontent.com/18329471/234640541-a6a65fbc-d7a5-4ec3-9b65-55305b01a7aa.png)
 
-<div align=center>
-  <figure>
-    <img src="https://user-images.githubusercontent.com/72010077/277691916-58be8e7d-133c-4df8-9416-d3243fc7a335.gif" alt="Grounding DINO">
-    <figcaption>SOTA Zero-Shot Openset Object Detection Model</figcaption>
-  </figure>
-</div>
-
-</br>
-
-<div align=center>
-  <figure>
-    <img src="https://user-images.githubusercontent.com/72010077/277692001-b58832b3-4c21-4c6f-9121-02d9daf2b02b.gif" alt="Recognize Anything Model">
-    <figcaption>Strong Image Tagging Model</figcaption>
-  </figure>
-</div>
-
-</br>
-
-<div align=center>
-  <figure>
-    <img src="https://user-images.githubusercontent.com/72010077/277405591-5ebffdcf-83e8-4999-9594-ee4058627d47.gif" alt="Segment Anything Model">
-    <figcaption>Powerful Object Segmentation Anything Model</figcaption>
-  </figure>
-</div>
-
-<div align=center>
-  <figure>
-    <img src="https://user-images.githubusercontent.com/72010077/282393906-059920cc-0f65-4d2c-9350-941aaa8bbd02.png" alt="PULC PersonAttribute Model">
-    <figcaption>Advanced Multi-Label Classification Model</figcaption>
-  </figure>
-</div>
-
+<video src="https://github.com/CVHub520/Resources/assets/72010077/a1fb281a-856c-493e-8989-84f4f783576b" 
+       controls 
+       width="100%" 
+       height="auto" 
+       style="max-width: 720px; height: auto; display: block; object-fit: contain;">
+</video>
 
 ## 📄 Table of Contents
 
@@ -71,8 +45,10 @@
 
 ## 🥳 What's New [⏏️](#📄-table-of-contents)
 
+- Mar. 2024:
+  - 🤗 Release the latest version [2.3.5](https://github.com/CVHub520/X-AnyLabeling/releases/tag/v2.3.5) 🤗
 - Feb. 2024:
-  - 🤗 Release the latest version [2.3.4](https://github.com/CVHub520/X-AnyLabeling/releases/tag/v2.3.4) 🤗
+  - Release version [2.3.4](https://github.com/CVHub520/X-AnyLabeling/releases/tag/v2.3.4).
   - Enable label display feature.
   - Release version [2.3.3](https://github.com/CVHub520/X-AnyLabeling/releases/tag/v2.3.3).
   - ✨✨✨ Support [YOLO-World](https://github.com/AILab-CVC/YOLO-World) model.

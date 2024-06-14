@@ -184,6 +184,7 @@ class SegmentAnythingONNX:
         """
         Predict masks for a single image.
         """
+        print(prompt)
         masks = self.run_decoder(
             embedding["image_embedding"],
             embedding["original_size"],

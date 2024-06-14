@@ -1,0 +1,5 @@
+type: sam6
+name: sam6
+model_type: vit_h
+display_name: Sam6
+checkpoint_path: .\sam_vit_h_4b8939.pth

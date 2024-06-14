@@ -1,4 +1,5 @@
 """This module defines Canvas widget - the core component for drawing image labels"""
+
 import imgviz
 import math
 from copy import deepcopy
@@ -706,7 +707,11 @@ class Canvas(
 
         else:
             for shape in reversed(self.shapes):
-                if self.is_visible(shape) and len(shape.points) > 1 and shape.contains_point(point):
+                if (
+                    self.is_visible(shape)
+                    and len(shape.points) > 1
+                    and shape.contains_point(point)
+                ):
                     self.set_hiding()
                     if shape not in self.selected_shapes:
                         if multiple_selection_mode:

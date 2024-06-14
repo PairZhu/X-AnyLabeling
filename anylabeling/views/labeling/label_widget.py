@@ -62,6 +62,8 @@ from .widgets import (
     ZoomWidget,
 )
 
+from ...global_data import GlobalData
+
 LABEL_COLORMAP = imgviz.label_colormap()
 
 # Green for the first label
@@ -104,6 +106,8 @@ class LabelingWidget(LabelDialog):
         self.selected_polygon_stack = []
         self.available_shapes = Shape.get_available_shapes()
         self.hidden_cls = []
+        self.prev_scroll_x = None
+        self.prev_scroll_y = None
 
         # see configs/anylabeling_config.yaml for valid configuration
         if config is None:
@@ -242,6 +246,11 @@ class LabelingWidget(LabelDialog):
         self.file_dock.setStyleSheet(dock_title_style)
 
         self.zoom_widget = ZoomWidget()
+
+        def update_zoom_value(value):
+            GlobalData["zoom"] = value
+
+        self.zoom_widget.valueChanged.connect(update_zoom_value)
         self.setAcceptDrops(True)
 
         self.canvas = self.label_list.canvas = Canvas(
@@ -259,6 +268,17 @@ class LabelingWidget(LabelDialog):
             Qt.Vertical: scroll_area.verticalScrollBar(),
             Qt.Horizontal: scroll_area.horizontalScrollBar(),
         }
+
+        def update_scroll_x(value):
+            self.prev_scroll_x = GlobalData["scroll_x"]
+            GlobalData["scroll_x"] = value
+
+        def update_scroll_y(value):
+            self.prev_scroll_y = GlobalData["scroll_y"]
+            GlobalData["scroll_y"] = value
+
+        self.scroll_bars[Qt.Vertical].valueChanged.connect(update_scroll_y)
+        self.scroll_bars[Qt.Horizontal].valueChanged.connect(update_scroll_x)
         self.canvas.scroll_request.connect(self.scroll_request)
 
         self.canvas.mode_changed.connect(self.set_edit_mode)
@@ -949,6 +969,13 @@ class LabelingWidget(LabelDialog):
             self.MANUAL_ZOOM: lambda: 1,
         }
 
+        GlobalData["get_win_zoom"] = lambda: round(
+            self.scale_fit_window() * 100
+        )
+        GlobalData["get_width_zoom"] = lambda: round(
+            self.scale_fit_width() * 100
+        )
+
         edit = action(
             self.tr("&Edit Label"),
             self.edit_label,
@@ -1113,6 +1140,9 @@ class LabelingWidget(LabelDialog):
             group_selected_shapes=group_selected_shapes,
             ungroup_selected_shapes=ungroup_selected_shapes,
         )
+
+        self.enable_show_cross_line(self._config["show_cross_line"])
+        self.enable_show_labels(self._config["show_labels"])
 
         self.canvas.vertex_selected.connect(
             self.actions.remove_point.setEnabled
@@ -1567,7 +1597,7 @@ class LabelingWidget(LabelDialog):
             label_file = osp.splitext(self.image_path)[0] + ".json"
             if self.output_dir:
                 label_file_without_path = osp.basename(label_file)
-                label_file = self.output_dir + '/' + label_file_without_path
+                label_file = self.output_dir + "/" + label_file_without_path
             self.save_labels(label_file)
             return
         self.dirty = True
@@ -1810,7 +1840,11 @@ class LabelingWidget(LabelDialog):
                     data = json.load(f)
                 shapes = data["shapes"]
                 for shape in shapes:
-                    if shape["shape_type"] in ["rectangle", "polygon", "rotation"]:
+                    if shape["shape_type"] in [
+                        "rectangle",
+                        "polygon",
+                        "rotation",
+                    ]:
                         points = np.array(shape["points"]).astype(np.int32)
                         x, y, w, h = cv2.boundingRect(points)
                         xmin = int(x)
@@ -3031,7 +3065,7 @@ class LabelingWidget(LabelDialog):
         if self.output_dir:
             image_dir = osp.dirname(filename)
             label_file_without_path = osp.basename(label_file)
-            label_file = self.output_dir + '/' + label_file_without_path
+            label_file = self.output_dir + "/" + label_file_without_path
         if QtCore.QFile.exists(label_file) and LabelFile.is_label_file(
             label_file
         ):
@@ -3099,11 +3133,17 @@ class LabelingWidget(LabelDialog):
         self.canvas.setEnabled(True)
         # set zoom values
         is_initial_load = not self.zoom_values
-        if self.filename in self.zoom_values:
-            self.zoom_mode = self.zoom_values[self.filename][0]
-            self.set_zoom(self.zoom_values[self.filename][1])
-        elif is_initial_load or not self._config["keep_prev_scale"]:
+        # if self.filename in self.zoom_values:
+        #     self.zoom_mode = self.zoom_values[self.filename][0]
+        #     self.set_zoom(self.zoom_values[self.filename][1])
+        if is_initial_load or not self._config["keep_prev_scale"]:
             self.adjust_scale(initial=True)
+        if self._config["keep_prev_scale"]:
+            if self.prev_scroll_x is not None:
+                self.set_scroll(Qt.Horizontal, self.prev_scroll_x)
+            if self.prev_scroll_y is not None:
+                self.set_scroll(Qt.Vertical, self.prev_scroll_y)
+
         # set scroll values
         for orientation in self.scroll_values:
             if self.filename in self.scroll_values[orientation]:
@@ -4637,7 +4677,7 @@ class LabelingWidget(LabelDialog):
             label_file = osp.splitext(file)[0] + ".json"
             if self.output_dir:
                 label_file_without_path = osp.basename(label_file)
-                label_file = self.output_dir + '/' + label_file_without_path
+                label_file = self.output_dir + "/" + label_file_without_path
             item = QtWidgets.QListWidgetItem(file)
             item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
             if QtCore.QFile.exists(label_file) and LabelFile.is_label_file(
@@ -4670,7 +4710,7 @@ class LabelingWidget(LabelDialog):
             label_file = osp.splitext(filename)[0] + ".json"
             if self.output_dir:
                 label_file_without_path = osp.basename(label_file)
-                label_file = self.output_dir + '/' + label_file_without_path
+                label_file = self.output_dir + "/" + label_file_without_path
             item = QtWidgets.QListWidgetItem(filename)
             item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
             if QtCore.QFile.exists(label_file) and LabelFile.is_label_file(

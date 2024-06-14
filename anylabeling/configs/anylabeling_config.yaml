@@ -73,9 +73,9 @@ epsilon: 10.0
 canvas:
   # None: do nothing
   # close: close polygon
-  double_click: close
+  double_click: ~
   # The max number of edits we can undo
-  num_backups: 10
+  num_backups: 25
 
 shortcuts:
   close: Ctrl+W

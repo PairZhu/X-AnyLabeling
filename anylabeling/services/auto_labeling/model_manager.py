@@ -842,6 +842,28 @@ class ModelManager(QObject):
                     )
                 )
                 return
+        elif model_config["type"] == "sam6":
+            from .sam6 import Sam6
+
+            try:
+                model_config["model"] = Sam6(
+                    model_config, on_message=self.new_model_status.emit
+                )
+                self.auto_segmentation_model_selected.emit()
+            except Exception as e:  # noqa
+                print(
+                    "Error in loading model: {error_message}".format(
+                        error_message=str(e)
+                    )
+                )
+                self.new_model_status.emit(
+                    self.tr(
+                        "Error in loading model: {error_message}".format(
+                            error_message=str(e)
+                        )
+                    )
+                )
+                return
         elif model_config["type"] == "segment_anything":
             from .segment_anything import SegmentAnything
 
@@ -1267,6 +1289,7 @@ class ModelManager(QObject):
             "yolov8_efficientvit_sam",
             "grounding_sam",
             "edge_sam",
+            "sam6",
         ]
         if (
             self.loaded_model_config is None
